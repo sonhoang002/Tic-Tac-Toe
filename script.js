@@ -1,9 +1,9 @@
 // Initialize Gameboard
 const Gameboard = (function() {
     const gameBoard = [
-        ['','X','X'],
-        ['X','O','O'],
-        ['O','X','X'],
+        ['','',''],
+        ['','',''],
+        ['','',''],
     ];
     
     function getBoard() {
@@ -21,10 +21,48 @@ const Gameboard = (function() {
 
 // Initialize controller
 const displayController = (function() {
-    let checkSymbol = "X";
+    // let checkSymbol = "X";
+    let turnCount = 0;
+    let activePlayer = null;
+    let playerList = [];
+
+    function registerPlayer(playerName, playerSymbol) {
+        playerList.push(playerName);
+        if (turnCount == 0 && playerSymbol == "X") {
+            activePlayer = playerName;
+            checkSymbol = playerSymbol;
+        };
+    }
+
+    const getActivePlayer = () => activePlayer;
 
     function setSymbol(playerSymbol) {
         checkSymbol = playerSymbol;
+    };
+
+    function checkTurnValidation(playerName) {
+        if (activePlayer == playerName) {
+            return true;
+        }
+
+        console.log(`Not ${playerName} turn!`);
+        return false;
+    };
+
+    function registerMove(row, col, symbol) {
+        if (Gameboard.getBoard()[row][col] !== "") {
+            console.log("Invalid Move!");
+            return;
+        } else {
+            Gameboard.addMoveToBoard(row, col, symbol);
+            Gameboard.getBoard().forEach(row => {
+                console.log(row.map(String).join(" | "));
+            });
+            activePlayer = playerList.find(p => p !== activePlayer);
+            turnCount ++;
+            checkGameStatus();
+        }
+
     }
 
     function checkVertically(colPosition) {
@@ -67,47 +105,33 @@ const displayController = (function() {
         return false;
     }
 
-    function checkDraw() {
-        let board = Gameboard.getBoard();
-        for (let r = 0; r < board.length; r ++) {
-            for (let c = 0; c < board[0].length; c ++) {
-                if (board[r][c] == '') {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
     function checkGameStatus() {
         for (let i = 0; i < 3; i ++) {
             if (checkHorizontally(i)) {
-                console.log(`${checkSymbol} win!`);
+                console.log(`${playerList.find(p => p !== activePlayer)} win!`);
                 return true;
             }
 
             if (checkVertically(i)) {
-                console.log(`${checkSymbol} win!`);
+                console.log(`${playerList.find(p => p !== activePlayer)} win!`);
                 return true;
             }
         }
 
         if(checkDiagonal()) {
-            console.log(`${checkSymbol} win!`);
+            console.log(`${playerList.find(p => p !== activePlayer)} win!`);
             return true;
         }
 
-        if(checkDraw()) {
+        if(turnCount == 9) {
             console.log("Draw");
             return true;
         }
 
-        console.log("Unfinished");
         return false;
     }
 
-    return {setSymbol, checkGameStatus};
+    return {setSymbol, checkGameStatus, registerPlayer, getActivePlayer, checkTurnValidation, registerMove};
 })();
 
 // Player Creation
@@ -115,29 +139,19 @@ function createPlayer(name, type) {
     let playerName = name;
     let playerSymbol = type;
 
-    function firstTurn() {
-        if (playerSymbol == "X") {
-            return goFirst = true;
-        } else {
-            return goFirst = false;
-        }
-    };
-
-    // function turnOrder() {
-
-    // }
+    (function registerP() {
+        displayController.registerPlayer(playerName, playerSymbol);
+    })();
 
     const getName = () => playerName;
 
-    function decision(row, col, symbol) {
-        if (Gameboard.getBoard()[row][col] == "") {
-            Gameboard.addMoveToBoard(row, col, symbol);
-        } else {
-            alert("cant");
+    function decision(row, col) {
+        if (displayController.checkTurnValidation(playerName)) {
+            displayController.registerMove(row, col, playerSymbol);
         }
     };
 
-    return {getName, firstTurn, decision};
+    return {getName, decision};
 };
 
 const player1 = createPlayer("Player1", "X");
