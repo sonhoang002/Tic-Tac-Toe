@@ -8,13 +8,41 @@
 </head>
 <body>
     <div class="outermost">
-        <div class="sidebar" id="user-sidebar"></div>
+        <div class="sidebar" id="user-sidebar">
+            <div class="user-sidebar-container">
+                <div class="nameContainer">
+                    <label for="userName"1>Name: </label>
+                    <input type="text" id="userName1" placeholder="Player1">
+                </div>
+                <div>
+                    <input type="radio" id="symbolSelector1" name="radio1" value="X" checked>
+                    <label for="symbolSelector1">X</label>
+                    <input type="radio" id="symbolSelector2" name="radio1" value="O">
+                    <label for="symbolSelector2">O</label>
+                </div>
+            </div>
+        </div>
         <div class="FHbar" id="header"></div>
         <div class="contentDiv"></div>
         <div class="FHbar" id="footer">
-            <button class="resetBtn">Reset</button>
+            <button class="btn" id="startBtn">Ready</button>
+            <button class="btn" id="resetBtn">Reset</button>
+            <button class="btn" id="hardResetBtn">Hard Reset</button>
         </div>
-        <div class="sidebar" id="user-second-sidebar"></div>
+        <div class="sidebar" id="user-second-sidebar">
+            <div class="user-sidebar-container">
+                <div class="nameContainer">
+                    <label for="userName2">Name: </label>
+                    <input type="text" id="userName2" placeholder="Player2">
+                </div>
+                <div>
+                    <input type="radio" id="symbolSelector3" name="radio2" value="X" disabled>
+                    <label for="symbolSelector3">X</label>
+                    <input type="radio" id="symbolSelector4" name="radio2" value="O" checked disabled>
+                    <label for="symbolSelector4">O</label>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

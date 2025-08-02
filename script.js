@@ -28,13 +28,24 @@ const Gameboard = (function() {
 // Initialize controller
 const displayController = (function() {
     let moveIndex = [[0, 0], [0, 1], [0, 2],
-                        [1, 0], [1, 1], [1, 2],
-                        [2, 0], [2, 1], [2, 2],]
+                     [1, 0], [1, 1], [1, 2],
+                     [2, 0], [2, 1], [2, 2],]
     let turnCount = 0;
     let activePlayer = null;
     let playerList = [];
     let startStatus = false;
+    let initialTurnOrder = [["X", 0], ["O", 0]];
     const header = document.querySelector("#header");
+
+    const getStartStatus = () => startStatus;
+
+    const getActivePlayer = () => activePlayer;
+
+    const getPlayerList = () => playerList;
+
+    const emptyPlayerList = () => playerList = [];
+
+    const resetInitialTurnOrder = () => initialTurnOrder = [["X", 0], ["O", 0]];
 
     function startGame() {
         if (playerList.length == 2) {
@@ -51,23 +62,21 @@ const displayController = (function() {
         }
         if (!playerList.find(p => p[0] === playerName)) {
             playerList.push([playerName, playerSymbol]);
+        } else {
+            header.textContent = "Can't have the same name!";
         }
 
         if (turnCount == 0 && playerSymbol == "X") {
             activePlayer = playerName;
             checkSymbol = playerSymbol;
+            initialTurnOrder.find(s => s[0] === checkSymbol)[1] ++;
+            // console.log(initialTurnOrder.find(s => s[0] === checkSymbol)[1])
         };
     }
 
     function numberToMove(number) {
         return moveIndex[number];
     }
-
-    const getStartStatus = () => startStatus;
-
-    const getActivePlayer = () => activePlayer;
-
-    const getPlayerList = () => playerList;
 
     function setSymbol(playerName, playerSymbol) {
         checkSymbol = playerSymbol;
@@ -90,7 +99,7 @@ const displayController = (function() {
         }
 
         if (Gameboard.getBoard()[row][col] !== "") {
-            console.log("Invalid Move!");
+            header.textContent = "Invalid Move!";
             return false;
         } else {
             Gameboard.addMoveToBoard(row, col, symbol);
@@ -99,6 +108,9 @@ const displayController = (function() {
             });
             activePlayer = playerList.find(p => p[0] !== activePlayer)[0];
             turnCount ++;
+            if (!checkGameStatus()) {
+                header.textContent = `${activePlayer} turn!`;
+            }
             checkGameStatus();
             checkSymbol = playerList.find(p => p[0] === activePlayer)[1];
             return true;
@@ -149,20 +161,20 @@ const displayController = (function() {
     function checkGameStatus() {
         for (let i = 0; i < 3; i ++) {
             if (checkHorizontally(i)) {
-                header.textContent = (`${playerList.find(p => p[0] !== activePlayer)} win!`);
+                header.textContent = (`${playerList.find(p => p[0] !== activePlayer)[0]} win!`);
                 startStatus = false;
                 return true;
             }
 
             if (checkVertically(i)) {
-                header.textContent = (`${playerList.find(p => p[0] !== activePlayer)} win!`);
+                header.textContent = (`${playerList.find(p => p[0] !== activePlayer)[0]} win!`);
                 startStatus = false;
                 return true;
             }
         }
 
         if(checkDiagonal()) {
-            header.textContent = (`${playerList.find(p => p[0] !== activePlayer)} win!`);
+            header.textContent = (`${playerList.find(p => p[0] !== activePlayer)[0]} win!`);
             startStatus = false;
             return true;
         }
@@ -178,15 +190,30 @@ const displayController = (function() {
 
     function resetGameA() {
         turnCount = 0;
-        activePlayer = playerList.find(p => p[1] === "X")[0];
+        if (initialTurnOrder[0][1] > initialTurnOrder[1][1]) {
+            activePlayer = playerList.find(p => p[1] === "O")[0];
+            initialTurnOrder[1][1] ++;
+        } else {
+            activePlayer = playerList.find(p => p[1] === "X")[0];
+            console.log(activePlayer);
+            initialTurnOrder[0][1] ++;
+        }
         Gameboard.resetGameB();
         startGame();
+    }
+
+    function hardReset() {
+        emptyPlayerList();
+        resetInitialTurnOrder();
+        startStatus = false;
+        turnCount = 0;
+        Gameboard.resetGameB();
     }
 
     return {setSymbol, checkGameStatus, registerPlayer,
             getActivePlayer, getPlayerList, checkTurnValidation,
             registerMove, startGame, numberToMove, getStartStatus,
-            resetGameA};
+            resetGameA, hardReset};
 })();
 
 // Player Creation
@@ -203,12 +230,6 @@ function createPlayer(name, type) {
         displayController.registerPlayer(playerName, playerSymbol);
     }
 
-    function decision(row, col) {
-        if (displayController.checkTurnValidation(playerName)) {
-            displayController.registerMove(row, col, playerSymbol);
-        }
-    };
-
     (function registerP() {
         displayController.registerPlayer(playerName, playerSymbol);
     })();
@@ -217,18 +238,105 @@ function createPlayer(name, type) {
         displayController.startGame();
     })();
 
-    return {getName, getSymbol, setSymbol, decision};
+    return {getName, getSymbol, setSymbol};
 };
 
+
+// DOM input & output
 const DOMLogicHandler = (function() {
     const contentDiv = document.querySelector(".contentDiv");
-    const resetBtn = document.querySelector(".resetBtn");
+    const resetBtn = document.querySelector("#resetBtn");
+    const readyBtn = document.querySelector("#startBtn");
+    const hardResetBtn = document.querySelector("#hardResetBtn");
+    const player1Name = document.querySelector("#userName1");
+    const player2Name = document.querySelector("#userName2");
+    const header = document.querySelector("#header");
+
+    function resetDOM() {
+        const selectedRadio1 = document.querySelectorAll('input[name="radio1"]');
+            selectedRadio1.forEach(radio => {
+                radio.disabled = false;
+        });
+        player1Name.value = "";
+        player2Name.value = "";
+        player1Name.placeholder = "Player1";
+        player2Name.placeholder = "Player2";
+        player1Name.disabled = false;
+        player2Name.disabled = false;
+        header.textContent = "";
+    }
+
+    (function normalReset() {
+        resetBtn.addEventListener("click", () => {
+            while(contentDiv.firstChild) {
+                contentDiv.removeChild(contentDiv.firstChild);
+            }
+            displayController.resetGameA();
+        });
+    })();
+
+    (function hardReset() {
+        hardResetBtn.addEventListener("click", () => {
+            while(contentDiv.firstChild) {
+                contentDiv.removeChild(contentDiv.firstChild);
+            }
+            displayController.hardReset();
+            resetDOM();
+        });
+    })();
+
+    (function addingPlayerToGame() {
+        readyBtn.addEventListener("click", () => {
+            if (displayController.getStartStatus()) {
+                header.textContent = "Game already started!";
+                return;
+            }
+            if (player1Name.value.trim() == "") {
+                player1Name.value = player1Name.placeholder;
+            } 
+            if (player2Name.value.trim() == "") {
+                player2Name.value = player2Name.placeholder;
+            }
+            const selectedRadio1Checked = document.querySelector('input[name="radio1"]:checked')
+            const selectedRadio2Checked = document.querySelector('input[name="radio2"]:checked')
+
+            createPlayer(player1Name.value, selectedRadio1Checked.value);
+            createPlayer(player2Name.value, selectedRadio2Checked.value);
+
+            if (player1Name.value !== player2Name.value) {
+                const selectedRadio1 = document.querySelectorAll('input[name="radio1"]');
+                selectedRadio1.forEach(radio => {
+                    radio.disabled = true;
+                });
+
+                player1Name.disabled = true;
+                player2Name.disabled = true;
+            }
+        });
+    })();
+
+    (function switchSymbol() {
+        const selectedRadio1 = document.querySelectorAll('input[name="radio1"]');
+        const selectedRadio2 = document.querySelectorAll('input[name="radio2"]');
+
+        selectedRadio1.forEach(radio => {
+            radio.addEventListener("click", () => {
+                const selectedValue = document.querySelector('input[name="radio1"]:checked');
+                const oppositeValue = selectedValue.value === "X" ? "O" : "X";
+
+                selectedRadio2.forEach(radio2 => {
+                    radio2.checked = radio2.value === oppositeValue;
+                });
+            });
+        });
+    })();
 
     function addingContentsToContentContainer() {
         for (let i = 0; i < 9; i ++) {
             const symbolHolderDiv = document.createElement("div");
             symbolHolderDiv.classList.add("symbolHolderDiv");
             symbolHolderDiv.divNumber = i;
+            
             symbolHolderDiv.addEventListener("click", () => {
                 if (displayController.getStartStatus()) {
                     let pName = displayController.getActivePlayer();
@@ -241,23 +349,31 @@ const DOMLogicHandler = (function() {
                         symbolHolderDiv.textContent = `${pSymbol}`;
                     }
                 }
+
+                updateDisableState();
             });
+
             contentDiv.appendChild(symbolHolderDiv);
         }
     }
 
-    (function resetGame() {
-        resetBtn.addEventListener("click", () => {
-            while(contentDiv.firstChild) {
-                contentDiv.removeChild(contentDiv.firstChild);
-            }
-            displayController.resetGameA();
-        });
-    })();
-
     return {addingContentsToContentContainer};
 })();
 
-const player1 = createPlayer("Player1", "X");
-const player2 = createPlayer("Player2", "O");
+function updateDisableState() {
+    const allCells = document.querySelectorAll(".symbolHolderDiv");
+    allCells.forEach(cell => {
+        if (!displayController.getStartStatus()) {
+            console.log(displayController.getStartStatus());
+            cell.classList.add("disable");
+        } else {
+            cell.classList.remove("disable");
+        }
+    })
+}
+
+
+
+// const player1 = createPlayer("Player1", "X");
+// const player2 = createPlayer("Player2", "O");
 
