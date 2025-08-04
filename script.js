@@ -146,12 +146,14 @@ const displayController = (function() {
         if (firstDiagonal[0] == checkSymbol &&
             firstDiagonal[1] == checkSymbol &&
             firstDiagonal[2] == checkSymbol) {
+                DOMLogicHandler.drawWinningMove(0,0,"diagonal");
                 return true;
         };
         
         if (secondDiagonal[0] == checkSymbol &&
             secondDiagonal[1] == checkSymbol &&
             secondDiagonal[2] == checkSymbol) {
+                DOMLogicHandler.drawWinningMove(0,0,"antiDiagonal");
                 return true;
         }
 
@@ -163,12 +165,14 @@ const displayController = (function() {
             if (checkHorizontally(i)) {
                 header.textContent = (`${playerList.find(p => p[0] !== activePlayer)[0]} win!`);
                 startStatus = false;
+                DOMLogicHandler.drawWinningMove(i, 0, "row");
                 return true;
             }
 
             if (checkVertically(i)) {
                 header.textContent = (`${playerList.find(p => p[0] !== activePlayer)[0]} win!`);
                 startStatus = false;
+                DOMLogicHandler.drawWinningMove(0, i, "col");
                 return true;
             }
         }
@@ -331,6 +335,68 @@ const DOMLogicHandler = (function() {
         });
     })();
 
+    function drawWinningMove(row, col, name) {
+        rowIndex = [[0, 1, 2],
+                    [3, 4, 5],
+                    [6, 7, 8]
+        ];
+
+        colIndex = [[0, 3, 6],
+                    [1, 4, 7],
+                    [2, 5, 8]
+        ];
+
+        diagonalIndex = [[0, 4, 8], [2, 4, 6]];
+
+        const allCells = document.querySelectorAll(".symbolHolderDiv");
+
+        if (row === 0 && name === "col") {
+            let i = 0;
+            allCells.forEach(cell => {
+                console.log(cell.divNumber);
+                if (cell.divNumber === colIndex[col][i]) {
+                    cell.style.backgroundColor = "green";
+                    i ++;
+                }
+            });
+        } else if (col === 0 && name === "row") {
+            let i = 0;
+            allCells.forEach(cell => {
+                if (cell.divNumber === rowIndex[row][i]) {
+                    cell.style.backgroundColor = "green";
+                    i ++;
+                }
+            });
+        } else if (name === "diagonal") {
+            let i = 0;
+            allCells.forEach(cell => {
+                if (cell.divNumber === diagonalIndex[0][i]) {
+                    cell.style.backgroundColor = "green";
+                    i ++;
+                }
+            });
+        } else if (name === "antiDiagonal") {
+            let i = 0;
+            allCells.forEach(cell => {
+                if (cell.divNumber === diagonalIndex[1][i]) {
+                    cell.style.backgroundColor = "green";
+                    i ++;
+                }
+            });
+        }
+    }
+
+    function updateDisableState() {
+        const allCells = document.querySelectorAll(".symbolHolderDiv");
+        allCells.forEach(cell => {
+            if (!displayController.getStartStatus()) {
+                cell.classList.add("disable");
+            } else {
+                cell.classList.remove("disable");
+            }
+        })
+    }
+
     function addingContentsToContentContainer() {
         for (let i = 0; i < 9; i ++) {
             const symbolHolderDiv = document.createElement("div");
@@ -357,23 +423,5 @@ const DOMLogicHandler = (function() {
         }
     }
 
-    return {addingContentsToContentContainer};
+    return {addingContentsToContentContainer, drawWinningMove};
 })();
-
-function updateDisableState() {
-    const allCells = document.querySelectorAll(".symbolHolderDiv");
-    allCells.forEach(cell => {
-        if (!displayController.getStartStatus()) {
-            console.log(displayController.getStartStatus());
-            cell.classList.add("disable");
-        } else {
-            cell.classList.remove("disable");
-        }
-    })
-}
-
-
-
-// const player1 = createPlayer("Player1", "X");
-// const player2 = createPlayer("Player2", "O");
-
